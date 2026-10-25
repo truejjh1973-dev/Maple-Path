@@ -1,0 +1,47 @@
+name: Publish MaplePath demo
+
+on:
+  push:
+    branches: [codex/maplepath-public-home]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maplepath-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Run regression tests
+        run: node --test tests/*.test.mjs
+      - name: Bundle translations
+        run: node scripts/build-locales.mjs
+      - name: Build project-path site
+        run: node scripts/build-pages.mjs
+        env:
+          PAGES_BASE_PATH: /Maple-Path/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish site
+        id: deployment
+        uses: actions/deploy-pages@v4

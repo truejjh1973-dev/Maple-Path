@@ -22,3 +22,6 @@ backups/
 *.tar.gz
 
 # Current dist is a tracked, buildless prototype; do not ignore until migration.
+
+# Generated GitHub Pages artifact
+_site/

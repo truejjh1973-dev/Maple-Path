@@ -1,0 +1,15 @@
+import {cp,mkdir,readFile,writeFile} from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const base=process.env.PAGES_BASE_PATH||'/Maple-Path/';
+if(!/^\/[A-Za-z0-9._-]+\/$/.test(base))throw Error('Expected one safe GitHub project path, for example /Maple-Path/');
+const output=path.join(root,'_site');
+await mkdir(output,{recursive:true});await cp(path.join(root,'dist'),output,{recursive:true});
+let html=await readFile(path.join(output,'index.html'),'utf8');
+html=html.replace(/(src|href)="\/(?!\/)([^"#]*)"/g,(all,attr,value)=>attr==='href'&&value===''?'href="'+base+'#/"':attr+'="'+base+value+'"');
+html=html.replace('<script src="'+base+'hosting.js"></script>','<script>globalThis.MAPLE_HOSTING_CONFIG='+JSON.stringify({basePath:base,hashRouting:true})+';</script><script src="'+base+'hosting.js"></script>');
+await writeFile(path.join(output,'index.html'),html);
+let app=await readFile(path.join(output,'app.js'),'utf8');app=app.replaceAll('"/assets/','"'+base+'assets/');await writeFile(path.join(output,'app.js'),app);
+await writeFile(path.join(output,'.nojekyll'),'');
+console.log('GitHub Pages artifact ready: _site, base='+base);

@@ -22,7 +22,7 @@
 
 学校介绍免费公开；学生档案、测评、成绩与成就提交、AI模拟要求注册登录。学生功能的收费方案尚未确定，本阶段不实现支付。
 
-本轮先完成本地设计文档，不发布网站。
+当前发布为公开静态演示版；真实账户与服务端AI尚未接入。
 
 ## 原型说明
 
@@ -33,7 +33,7 @@
 ## 当前工作目录与同步
 
 - 工作目录：`D:/AI project/Maple Path`。
-- GitHub私有仓库：https://github.com/truejjh1973-dev/Maple-Path 。
+- GitHub公开仓库：https://github.com/truejjh1973-dev/Maple-Path 。
 - 后续开发以本目录为准；旧工作目录保留作为迁移前副本。
 - 根目录原有三份设计文档予以保留；最新设计与环境方案统一见 `docs/`。
 
@@ -44,3 +44,8 @@
 ## 当前视觉主题
 
 采用MYLS参考风格：暖白底色、黑色大标题、钴蓝强调及胶囊按钮。主题实现为dist/reference-theme.css，覆盖旧绿色样式；详见docs/08-MYLS风格视觉更新.md。
+
+## GitHub Pages 自动发布
+
+在线演示：https://truejjh1973-dev.github.io/Maple-Path/ 。推送到 codex/maplepath-public-home 分支后，GitHub Actions 自动运行测试并部署。详见 docs/09-GitHub-Pages自动发布.md。
+
