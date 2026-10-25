@@ -1,0 +1,20 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
+const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+const publicApp=readFileSync(new URL('../dist/public.js',import.meta.url),'utf8');
+function setup(url='/'){
+ const nodes=new Map(),storage=new Map(),session=new Map();
+ const node=id=>{if(!nodes.has(id))nodes.set(id,{innerHTML:'',textContent:'',value:'90',checked:false,focus(){},insertAdjacentHTML(_,v){this.innerHTML+=v}});return nodes.get(id)};
+ let address=new URL(url,'http://localhost');
+ const context=vm.createContext({URL,URLSearchParams,console,setTimeout(){},requestAnimationFrame(){},confirm:()=>true,Blob,document:{querySelector:node,getElementById:id=>node('#'+id),body:{classList:{toggle(){}}},addEventListener(){}},location:{get pathname(){return address.pathname},get search(){return address.search},get hash(){return address.hash},get origin(){return address.origin},get href(){return address.href}},history:{pushState(_,__,u){address=new URL(u,address)},replaceState(_,__,u){address=new URL(u,address)}},window:{scrollTo(){},addEventListener(){}},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},sessionStorage:{getItem:k=>session.get(k)||null,setItem:(k,v)=>session.set(k,v),removeItem:k=>session.delete(k)}});
+ vm.runInContext(app,context);vm.runInContext(publicApp,context);
+ return {run:code=>vm.runInContext(code,context),node,storage,address:()=>address.pathname};
+}
+test('public landing is default, unknown paths show 404',()=>{const c=setup();assert.match(c.node('#app').innerHTML,/从BC课堂/);assert.equal(c.run('page'),'landing');const n=setup('/unknown');assert.match(n.node('#app').innerHTML,/404/)});
+test('student path uses explicit demo entry and preserves route on reload',()=>{const c=setup('/student');assert.equal(c.address(),'/login');assert.match(c.node('#app').innerHTML,/云端注册与登录尚未接入/);c.run('enterDemo()');assert.equal(c.address(),'/student');assert.match(c.node('#app').innerHTML,/下一步|YOUR NEXT STEP/);c.run("go('grades')");assert.equal(c.address(),'/student/academics');assert.match(c.node('#app').innerHTML,/我的BC课程清单/)});
+test('all five preview panels leave student state and local storage untouched',()=>{const c=setup();c.run("state.courses=[{name:names[2],mark:87,status:'在修'}];save()");const before=c.run('JSON.stringify(state)'),stored=[...c.storage];for(let i=0;i<5;i++)c.run(`selectPreview(${i})`);assert.equal(c.run('JSON.stringify(state)'),before);assert.deepEqual([...c.storage],stored);assert.match(c.node('#report-preview').innerHTML,/仍待完成/);c.run("go('example')");assert.equal(c.run('JSON.stringify(state)'),before)});
+test('school search, combined filters and empty state use correct counts',()=>{const c=setup('/schools');assert.equal(c.node('#school-count').textContent,'8 所学校');c.run("schoolQuery='滑铁卢';updateSchoolResults()");assert.equal(c.node('#school-count').textContent,'1 所学校');c.run("filter='BC';updateSchoolResults()");assert.equal(c.node('#school-count').textContent,'0 所学校');assert.match(c.node('#school-results').innerHTML,/清除筛选/)});
+test('home university links focus on the selected school',()=>{const c=setup('/schools?school=SFU');assert.equal(c.node('#school-count').textContent,'1 所学校');assert.match(c.node('#school-results').innerHTML,/西蒙菲莎/)});
+test('existing quiz and simulation functions remain usable; hypothetical course does not mutate grades',()=>{const c=setup();c.run('enterDemo()');c.run("state.courses=[{name:names[2],mark:87,status:'在修'}];go('simulate')");const before=c.run('JSON.stringify(state.courses)');c.node('#addPhysics').checked=true;c.run('runSim()');assert.equal(c.run('JSON.stringify(state.courses)'),before);assert.match(c.node('#simResult').innerHTML,/计划修读，尚未完成/);c.run("go('quiz')");assert.match(c.node('#app').innerHTML,/12/)});
