@@ -1,0 +1,15 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url);
+const {createTranslator}=require('../dist/i18n-core.js');
+const en=JSON.parse(readFileSync(new URL('../locales/en.json',import.meta.url)));
+const traditional=JSON.parse(readFileSync(new URL('../locales/zh-Hant.json',import.meta.url)));
+const normalize=JSON.parse(readFileSync(new URL('../locales/search-normalization.json',import.meta.url)));
+const t=createTranslator({en,'zh-Hant':traditional});
+test('all existing source phrases have English and Traditional Chinese translations',()=>{const source=['app.js','public.js'].map(f=>readFileSync(new URL('../dist/'+f,import.meta.url),'utf8')).join('\n');const phrases=new Set(source.match(/[\u3400-\u9fff][\u3400-\u9fff，。；：、！？（）—·\/\s]*[\u3400-\u9fff]|[\u3400-\u9fff]/g));for(const p of phrases){assert.ok(en[p],p);assert.ok(traditional[p],p);assert.doesNotMatch(t(p,'en'),/[\u3400-\u9fff]/,p)}});
+test('navigation, form and validation terms translate in all three locales',()=>{assert.equal(t('课程与成绩','zh-Hans'),'课程与成绩');assert.equal(t('课程与成绩','en'),'Courses & Grades');assert.equal(t('课程与成绩','zh-Hant'),'課程與成績');assert.equal(t('计划修读，尚未完成','en'),'Planned, not yet completed');assert.equal(t('云端注册与登录尚未接入','en'),'Cloud registration and sign-in are not connected')});
+test('dynamic grades and course identifiers remain intact',()=>{assert.equal(t('English Studies 12 · 已完成（自报） · 88%','en'),'English Studies 12 · Completed (self-reported) · 88%');assert.match(t('8 所学校','en'),/8 universities/);assert.match(t('还有 3 道题未完成','en'),/3/);assert.equal(t('Pre-Calculus 12','zh-Hant'),'Pre-Calculus 12')});
+test('Traditional Chinese school queries normalize without changing English names',()=>{const n=s=>s.replace(/[\u3400-\u9fff]/g,c=>normalize[c]||c);assert.equal(n('滑鐵盧'),'滑铁卢');assert.equal(n('英屬哥倫比亞大學'),'英属哥伦比亚大学');assert.equal(n('UBC'),'UBC')});
+test('catalog keys are in sync and unknown locales leave source unchanged',()=>{assert.deepEqual(Object.keys(en).sort(),Object.keys(traditional).sort());assert.equal(t('课程与成绩','fr'),'课程与成绩')});

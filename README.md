@@ -36,3 +36,7 @@
 - GitHub私有仓库：https://github.com/truejjh1973-dev/Maple-Path 。
 - 后续开发以本目录为准；旧工作目录保留作为迁移前副本。
 - 根目录原有三份设计文档予以保留；最新设计与环境方案统一见 `docs/`。
+
+## 界面语言
+
+已提供简体中文、繁體中文、English切换，偏好保存在浏览器。维护词典见locales/README.md；实现与验证见docs/06-三语言界面实现说明.md。运行全部测试：node --test tests/*.test.mjs。
