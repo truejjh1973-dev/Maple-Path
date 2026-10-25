@@ -16,10 +16,10 @@
    if(node.parentElement?.closest('script,style,[data-language-switch],[data-no-translate],textarea,input'))continue;
    const output=remap(node,node.data,textSources);if(output!==node.data)node.data=output;
   }
-  for(const element of document.querySelectorAll('[placeholder],[aria-label],[title]')){
+  for(const element of document.querySelectorAll('[placeholder],[aria-label],[title],[alt]')){
    if(element.closest('[data-language-switch],[data-no-translate]'))continue;
    let cache=attributeSources.get(element);if(!cache){cache={};attributeSources.set(element,cache)}
-   for(const name of ['placeholder','aria-label','title'])if(element.hasAttribute(name)){
+   for(const name of ['placeholder','aria-label','title','alt'])if(element.hasAttribute(name)){
     const value=element.getAttribute(name),old=cache[name],source=old&&old.output===value?old.source:value,output=translate(source,locale);cache[name]={source,output};if(output!==value)element.setAttribute(name,output);
    }
   }
@@ -27,7 +27,7 @@
   document.documentElement.lang=locale;document.body.dataset.locale=locale;
   if(document.title!==previousTitle)sourceTitle=document.title;
   previousTitle=translate(sourceTitle,locale);if(document.title!==previousTitle)document.title=previousTitle;
-  observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','aria-label','title']});
+  observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','aria-label','title','alt']});
  }
  document.addEventListener('change',event=>{if(!event.target.matches('[data-language-switch]'))return;locale=event.target.value;try{localStorage.setItem(key,locale)}catch{}apply()});
  // Dialogs, including deletion confirmation, follow the selected UI language.

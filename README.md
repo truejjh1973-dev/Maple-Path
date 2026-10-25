@@ -40,3 +40,7 @@
 ## 界面语言
 
 已提供简体中文、繁體中文、English切换，偏好保存在浏览器。维护词典见locales/README.md；实现与验证见docs/06-三语言界面实现说明.md。运行全部测试：node --test tests/*.test.mjs。
+
+## 当前视觉主题
+
+采用MYLS参考风格：暖白底色、黑色大标题、钴蓝强调及胶囊按钮。主题实现为dist/reference-theme.css，覆盖旧绿色样式；详见docs/08-MYLS风格视觉更新.md。
